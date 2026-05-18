@@ -17,7 +17,7 @@ Web 3D 是用浏览器作为载体呈现和交互 3D 内容的技术领域。相
 ### 行业应用方向
 
 | 方向 | 典型场景 | 核心技术 |
-|------|---------|---------|
+| ---- | -------- | --------- |
 | **3D 编辑器/ CAD** | 参数化建模、结构编辑、Brep 造型 | Three.js + 几何引擎(WASM) |
 | **数字孪生/智慧城市** | 园区、工厂、建筑的 3D 可视化 | Cesium + Three.js + GIS |
 | **电商/展示** | 商品 3D 预览、虚拟试穿 | Three.js + glTF + WebXR |
@@ -27,7 +27,7 @@ Web 3D 是用浏览器作为载体呈现和交互 3D 内容的技术领域。相
 
 ### 技术分层
 
-```
+```text
 应用层：   编辑器 / 可视化平台 / 数据分析工具
 引擎层：   Three.js / Cesium / Babylon.js
 渲染层：   WebGL 2.0 / WebGPU（未来）
@@ -37,6 +37,46 @@ Web 3D 是用浏览器作为载体呈现和交互 3D 内容的技术领域。相
 ```
 
 当前 Web 3D 的主流渲染标准是 **WebGL 2.0**，**WebGPU** 是下一代标准（Chrome 已支持，生态尚在建设中）。Three.js 是绝对主流的封装库，Cesium 在 GIS 领域占据主导。过时的技术如 VRML、Flash 3D、Unity Web Player 等不需要关注。
+
+---
+
+## 开发规范
+
+### Git 提交规范
+
+每次代码改动都需要使用 Git 提交，提交信息遵循 **语义化提交规范（Conventional Commits）**：
+
+```
+<type>(<scope>): <subject>
+
+# 常用 type：
+feat      # 新功能
+fix       # 修复 bug
+docs      # 文档变更
+refactor  # 重构
+style     # 代码格式（不影响功能）
+test      # 测试相关
+chore     # 构建/工具/依赖变更
+```
+
+示例：
+```
+feat(chapter-01): 实现 Vector3 和 Matrix4 数学库
+docs(chapter-01): 添加 3D 数学基础理论文档
+fix(chapter-03): 修复 GLTFLoader 模型加载异常
+```
+
+### 包管理器
+
+统一使用 **pnpm** 作为包管理器，禁止使用 npm 或 yarn。
+
+```bash
+pnpm install          # 安装依赖
+pnpm add <package>    # 添加依赖
+pnpm add -D <package> # 添加开发依赖
+pnpm run dev          # 启动开发服务器
+pnpm run build        # 构建
+```
 
 ---
 
@@ -237,7 +277,7 @@ Web 3D 是用浏览器作为载体呈现和交互 3D 内容的技术领域。相
 
 ## 学习路线图
 
-```
+```text
 Ch1 数学基础 ──→ Ch2 WebGL 管线 ──→ Ch3 Three.js 核心 ──→ Ch4 交互控制
                                                               │
                                                               ↓
@@ -259,7 +299,7 @@ Ch1 数学基础 ──→ Ch2 WebGL 管线 ──→ Ch3 Three.js 核心 ──
 
 ## 仓库目录结构
 
-```
+```text
 base-3d/
 ├── docs/                    # 理论知识（markdown）
 │   ├── project-background.md
@@ -283,11 +323,11 @@ base-3d/
 
 ```bash
 # 在任意项目目录下
-npm install          # 安装依赖
-npm run dev          # 启动开发服务器
-npm run build        # 生产构建
-npm run preview      # 预览构建产物
-npm run lint         # ESLint 检查
-npm run test         # 运行测试（如有）
-npx tsc --noEmit     # 仅类型检查，不生成文件
+pnpm install          # 安装依赖
+pnpm run dev          # 启动开发服务器
+pnpm run build        # 生产构建
+pnpm run preview      # 预览构建产物
+pnpm run lint         # ESLint 检查
+pnpm run test         # 运行测试（如有）
+pnpm exec tsc --noEmit # 仅类型检查，不生成文件
 ```
