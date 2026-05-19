@@ -6,8 +6,8 @@ export function createCheckerTexture(gl: WebGL2RenderingContext, size: number = 
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
 
-  const tileCount = 8;
-  const tileSize = size / tileCount;
+  const tileCount = 8; // 瓦片个数
+  const tileSize = size / tileCount; // 单个瓦片尺寸
 
   for (let y = 0; y < tileCount; y++) {
     for (let x = 0; x < tileCount; x++) {

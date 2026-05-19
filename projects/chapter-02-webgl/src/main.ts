@@ -12,7 +12,7 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 document.body.appendChild(canvas);
 
-const gl = canvas.getContext('webgl2', { antialias: true })!;
+const gl = canvas.getContext('webgl2', { antialias: true })!; // antialias: 是否开启抗锯齿
 if (!gl) throw new Error('WebGL 2.0 不受支持');
 
 // ——— 2. 编译着色器 ———
