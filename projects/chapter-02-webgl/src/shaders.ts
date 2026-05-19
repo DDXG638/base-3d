@@ -14,7 +14,7 @@ out vec2 vTexCoord;
 uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
-uniform mat4 uNormalMatrix;
+uniform mat3 uNormalMatrix;
 
 void main() {
     // 计算世界空间中的顶点位置
@@ -23,7 +23,7 @@ void main() {
 
     // 法线需要用法线矩阵变换（模型矩阵的逆转置）
     // 忽略平移分量，保证非均匀缩放下法线仍然正确
-    vNormal = normalize(mat3(uNormalMatrix) * aNormal);
+    vNormal = normalize(uNormalMatrix * aNormal);
 
     vTexCoord = aTexCoord;
 
