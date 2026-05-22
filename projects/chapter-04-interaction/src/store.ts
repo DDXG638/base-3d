@@ -17,6 +17,7 @@ const defaultObjects: SceneObject[] = [
   { id: '2', name: '球体', type: 'sphere', color: '#4ecdc4', position: [0, 0.8, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
   { id: '3', name: '圆柱', type: 'cylinder', color: '#f2cc8f', position: [2, 0.8, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
   { id: '4', name: '圆环', type: 'torus', color: '#81b29a', position: [0, 0.8, 2], rotation: [0, 0, 0], scale: [1, 1, 1] },
+  { id: '5', name: '立方体2', type: 'box', color: '#15d835', position: [0, 0.8, -2], rotation: [0, 0, 0], scale: [1, 1, 1] },
 ];
 
 interface EditorState {

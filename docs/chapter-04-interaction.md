@@ -29,7 +29,7 @@
 ### 2.2 实现步骤
 
 ```typescript
-// 1. 标准化鼠标坐标到 NDC ([-1, 1])
+// 1. 标准化鼠标坐标到 NDC ([-1, 1])（标准化设备坐标）
 const mouse = new THREE.Vector2();
 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
