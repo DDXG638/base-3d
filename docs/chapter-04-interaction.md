@@ -254,6 +254,108 @@ dragControls.addEventListener('drag', (event) => {
 
 ---
 
+## 10. 撤销/重做的数据结构设计
+
+核心思路是**命令模式 (Command Pattern)**——不直接改数据，而是把每次操作包装成可执行/可撤销的命令对象。
+
+### 10.1 命令接口
+
+```typescript
+interface EditorCommand {
+  execute(): void;    // 执行
+  undo(): void;       // 撤销
+}
+```
+
+### 10.2 Transform 命令
+
+```typescript
+class TransformCommand implements EditorCommand {
+  constructor(
+    private objectId: string,
+    private property: 'position' | 'rotation' | 'scale',
+    private oldValue: [number, number, number],
+    private newValue: [number, number, number],
+    private apply: (id: string, prop: string, val: [number, number, number]) => void,
+  ) {}
+
+  execute() { this.apply(this.objectId, this.property, this.newValue); }
+  undo()    { this.apply(this.objectId, this.property, this.oldValue); }
+}
+```
+
+命令对象存储**变更前后的快照**，`execute` 和 `undo` 分别应用新旧值。`apply` 回调就是现有的 `updateObject` 函数——命令模式在调用层套一层壳，不修改原有数据结构。
+
+### 10.3 历史栈
+
+```typescript
+interface HistoryState {
+  undoStack: EditorCommand[];  // 已执行的命令（可 undo）
+  redoStack: EditorCommand[];  // 已撤销的命令（可 redo）
+}
+
+function executeCommand(cmd: EditorCommand) {
+  cmd.execute();
+  undoStack.push(cmd);
+  redoStack = [];  // 新操作清空 redo 栈
+}
+
+function undo() {
+  const cmd = undoStack.pop();
+  if (cmd) { cmd.undo(); redoStack.push(cmd); }
+}
+
+function redo() {
+  const cmd = redoStack.pop();
+  if (cmd) { cmd.execute(); undoStack.push(cmd); }
+}
+```
+
+两条栈是最经典的 undo/redo 实现，主流编辑器（Figma、Blender、VS Code）都是这个模型。
+
+### 10.4 Gizmo 拖拽的合并处理
+
+拖拽 Gizmo 时 `objectChange` 每帧都在触发，如果每帧都压一条命令会导致 undo 栈爆炸，而且无法一步撤销回拖拽前的状态。需要在 pointer down/up 之间做**连续操作合并**：
+
+```typescript
+let dragStartValue: [number, number, number] | null = null;
+
+transformControls.addEventListener('pointerDown', () => {
+  dragStartValue = [target.position.x, target.position.y, target.position.z];
+});
+
+transformControls.addEventListener('pointerUp', () => {
+  if (dragStartValue && target) {
+    const endValue: [number, number, number] = [
+      target.position.x, target.position.y, target.position.z,
+    ];
+    const cmd = new TransformCommand(id, 'position', dragStartValue, endValue, applyFn);
+    executeCommand(cmd);
+  }
+  dragStartValue = null;
+});
+```
+
+**关键**：pointerDown 记录初始值，pointerUp 时把「初始值 → 最终值」作为**一条**命令压栈。中间所有中间帧的变更不产生命令。
+
+### 10.5 键盘快捷键绑定
+
+```typescript
+useEffect(() => {
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.metaKey || e.ctrlKey) {
+      if (e.key === 'z' && !e.shiftKey) undo();
+      if (e.key === 'z' && e.shiftKey) redo();  // Cmd+Shift+Z
+      if (e.key === 'y') redo();                  // Ctrl+Y
+    }
+  };
+  window.addEventListener('keydown', onKeyDown);
+  return () => window.removeEventListener('keydown', onKeyDown);
+}, []);
+```
+
+---
+
 ## 学习建议
 
 - Raycaster 是核心中的核心—拾取、拖拽、放置物体都依赖它
