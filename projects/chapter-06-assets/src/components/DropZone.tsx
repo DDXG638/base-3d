@@ -1,6 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
-import { useStore, extractModelInfo } from '../store';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { useStore, extractModelInfo, createGLTFLoader } from '../store';
 
 export default function DropZone() {
   const [dragOver, setDragOver] = useState(false);
@@ -19,7 +18,7 @@ export default function DropZone() {
     const reader = new FileReader();
     reader.onload = () => {
       const buffer = reader.result as ArrayBuffer;
-      const loader = new GLTFLoader();
+      const loader = createGLTFLoader();
 
       loader.parse(buffer, '', (gltf) => {
         const info = extractModelInfo(gltf, file.name, buffer.byteLength);

@@ -1,6 +1,20 @@
 import { create } from 'zustand';
 import { Mesh } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+/** 创建已配置 DRACOLoader 的 GLTFLoader 单例 */
+export function createGLTFLoader(): GLTFLoader {
+  const dracoLoader = new DRACOLoader();
+  // Google 提供的 Draco 解码器 CDN（WASM 版本）
+  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+  // GLB 文件可能内嵌了 Draco 压缩数据，使用 CDN 的 WASM 解码器解压
+
+  const loader = new GLTFLoader();
+  loader.setDRACOLoader(dracoLoader);
+  return loader;
+}
 
 interface ModelInfo {
   name: string;
