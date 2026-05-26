@@ -6,7 +6,7 @@ export default function Controls() {
   const error = useStore((s) => s.error);
 
   return (
-    <div className="absolute top-4 left-4 flex flex-col gap-2">
+    <div className="absolute top-16 left-4 flex flex-col gap-2">
       {/* 线框切换 */}
       <button
         onClick={toggleWireframe}
