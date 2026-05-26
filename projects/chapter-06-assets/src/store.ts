@@ -37,11 +37,13 @@ interface AppState {
   loading: boolean;
   error: string | null;
   wireframe: boolean;
+  animationsPlaying: boolean;
   // 操作
   setGltf: (gltf: GLTF, url: string, info: ModelInfo) => void;
   setLoading: (v: boolean) => void;
   setError: (msg: string | null) => void;
   toggleWireframe: () => void;
+  toggleAnimation: () => void;
   clearModel: () => void;
 }
 
@@ -52,6 +54,7 @@ export const useStore = create<AppState>((set) => ({
   loading: false,
   error: null,
   wireframe: false,
+  animationsPlaying: true,
 
   setGltf: (gltf, url, info) => set({
     gltf, modelUrl: url, modelInfo: info, loading: false, error: null,
@@ -59,6 +62,7 @@ export const useStore = create<AppState>((set) => ({
   setLoading: (v) => set({ loading: v, error: null }),
   setError: (msg) => set({ error: msg, loading: false }),
   toggleWireframe: () => set((s) => ({ wireframe: !s.wireframe })),
+  toggleAnimation: () => set((s) => ({ animationsPlaying: !s.animationsPlaying })),
   clearModel: () => set({
     gltf: null, modelUrl: null, modelInfo: null, error: null,
   }),
