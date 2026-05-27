@@ -38,6 +38,14 @@ export default function InstancedCubes() {
     mesh.instanceColor!.needsUpdate = true;
   }, [cubeCount]);
 
+  // 组件卸载时手动释放 useMemo 创建的 GPU 资源
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+      material.dispose();
+    };
+  }, [geometry, material]);
+
   // 整体缓慢旋转
   useFrame((_state, delta) => {
     if (meshRef.current) {
