@@ -46,7 +46,7 @@ export default function CesiumViewer() {
 
     // 飞到北京国贸区域
     viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(116.461, 39.909, 3000),
+      destination: Cesium.Cartesian3.fromDegrees(116.461, 39.909, 1200),
       orientation: {
         heading: Cesium.Math.toRadians(0),
         pitch: Cesium.Math.toRadians(-45),
@@ -56,11 +56,11 @@ export default function CesiumViewer() {
 
     // 放置建筑 Entity
     buildings.forEach((b) => {
-      // 将建筑高度转换为米（Entity 位置使用海拔高度，entity 高度=建筑高/2 使模型居中）
+      // 建筑高度：将 altitude 设在地形上方，避免被地形遮挡
+      const altitude = 50; // 北京城区海拔约 40-50m，建筑起步在此以上
       const entity = viewer.entities.add({
         id: b.id,
-        position: Cesium.Cartesian3.fromDegrees(b.lng, b.lat, 0),
-        // 使用圆柱体表示建筑
+        position: Cesium.Cartesian3.fromDegrees(b.lng, b.lat, altitude + b.height / 10),
         cylinder: {
           length: b.height / 5,        // 缩小便于展示
           topRadius: 30,
@@ -86,13 +86,16 @@ export default function CesiumViewer() {
     // 点击建筑 Entity → 显示信息
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction((click: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
-      const picked = viewer.scene.pick(click.position);
-      if (Cesium.defined(picked) && picked.id) {
-        const entity = picked.id as Cesium.Entity;
-        const info = entity.properties?.buildingInfo?.getValue();
-        if (info) {
-          selectBuilding(info);
-          return;
+      // drillPick 返回所有命中对象（穿透透明/地形），比 pick() 只取顶层更可靠
+      const pickedList = viewer.scene.drillPick(click.position);
+      for (const picked of pickedList) {
+        if (Cesium.defined(picked) && picked.id) {
+          const entity = picked.id as Cesium.Entity;
+          const info = entity.properties?.buildingInfo?.getValue();
+          if (info) {
+            selectBuilding(info);
+            return;
+          }
         }
       }
       selectBuilding(null);
