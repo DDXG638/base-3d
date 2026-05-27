@@ -57,9 +57,15 @@ export default function CesiumViewer() {
       const entity = viewer.entities.add({
         id: b.id,
         position: Cesium.Cartesian3.fromDegrees(b.lng, b.lat, altitude + h / 2),
+        // 点标记：始终可命中，兜底点击拾取
+        point: {
+          pixelSize: 12,
+          color: getStatusColor(b.status),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
         box: {
           dimensions: new Cesium.Cartesian3(40, 40, h),
-          material: getStatusColor(b.status),
+          material: getStatusColor(b.status) as any,
         },
         label: {
           text: b.name,
@@ -70,7 +76,7 @@ export default function CesiumViewer() {
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
           pixelOffset: new Cesium.Cartesian2(0, -12),
           show: showLabels,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY, // 标签始终可见
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
         },
         properties: { buildingInfo: b },
       });
@@ -82,6 +88,8 @@ export default function CesiumViewer() {
     handler.setInputAction((click: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
       // drillPick 返回所有命中对象（穿透透明/地形），比 pick() 只取顶层更可靠
       const pickedList = viewer.scene.drillPick(click.position);
+      // 调试：打印所有命中对象，帮助排查点击无反应的问题
+      console.log('picked count:', pickedList.length, pickedList.map(p => ({ id: (p as any).id?.id, primitive: p.primitive?.constructor?.name })));
       for (const picked of pickedList) {
         if (Cesium.defined(picked) && picked.id) {
           const entity = picked.id as Cesium.Entity;
