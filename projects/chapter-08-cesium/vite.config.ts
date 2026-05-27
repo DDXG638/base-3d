@@ -2,31 +2,26 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-import path from 'node:path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     tailwindcss(),
-    // Cesium 需要静态资源（workers、CSS 图片等），构建时复制到输出目录
+    // Cesium 静态资源（Workers/Assets/Widgets），构建时复制到 dist/
     viteStaticCopy({
-      targets: [{
-        src: 'node_modules/cesium/Build/Cesium/Workers/*',
-        dest: 'cesium/Workers',
-      }, {
-        src: 'node_modules/cesium/Build/Cesium/ThirdParty/*',
-        dest: 'cesium/ThirdParty',
-      }, {
-        src: 'node_modules/cesium/Build/Cesium/Assets/*',
-        dest: 'cesium/Assets',
-      }, {
-        src: 'node_modules/cesium/Build/Cesium/Widgets/*',
-        dest: 'cesium/Widgets',
-      }],
+      targets: [
+        { src: 'node_modules/cesium/Build/Cesium/Workers/*', dest: 'cesium/Workers' },
+        { src: 'node_modules/cesium/Build/Cesium/ThirdParty/*', dest: 'cesium/ThirdParty' },
+        { src: 'node_modules/cesium/Build/Cesium/Assets/*', dest: 'cesium/Assets' },
+        { src: 'node_modules/cesium/Build/Cesium/Widgets/*', dest: 'cesium/Widgets' },
+      ],
     }),
   ],
   define: {
-    // 告诉 Cesium 静态资源在哪
-    CESIUM_BASE_URL: JSON.stringify('/cesium'),
+    // dev 模式：从 node_modules 直接读取
+    // build 模式：staticCopy 插件复制到 /cesium/ 目录
+    CESIUM_BASE_URL: JSON.stringify(
+      mode === 'production' ? '/cesium' : '/node_modules/cesium/Build/Cesium'
+    ),
   },
-});
+}));
