@@ -36,13 +36,8 @@ export default function CesiumViewer() {
 
     viewerRef.current = viewer;
 
-    // 添加 OpenStreetMap 影像（备用底图）
-    const osmLayer = viewer.imageryLayers.addImageryProvider(
-      new Cesium.OpenStreetMapImageryProvider({
-        url: 'https://tile.openstreetmap.org/',
-      }),
-    );
-    (osmLayer as any)._name = 'OpenStreetMap';
+    // 使用 Cesium 默认底图（通过 Ion Token 自动加载 Bing/Cesium World Imagery）
+    // 不需要额外添加 OSM 图层
 
     // 飞到北京国贸区域
     viewer.camera.flyTo({
@@ -56,16 +51,15 @@ export default function CesiumViewer() {
 
     // 放置建筑 Entity
     buildings.forEach((b) => {
-      // 建筑高度：将 altitude 设在地形上方，避免被地形遮挡
-      const altitude = 50; // 北京城区海拔约 40-50m，建筑起步在此以上
+      // 建筑高度：altitude 设在 Box 底部（海拔 50m 起步保证在地形之上）
+      const altitude = 50;
+      const h = b.height / 4; // 缩放高度便于展示
       const entity = viewer.entities.add({
         id: b.id,
-        position: Cesium.Cartesian3.fromDegrees(b.lng, b.lat, altitude + b.height / 10),
-        cylinder: {
-          length: b.height / 5,        // 缩小便于展示
-          topRadius: 30,
-          bottomRadius: 30,
-          material: getStatusColor(b.status) as any,
+        position: Cesium.Cartesian3.fromDegrees(b.lng, b.lat, altitude + h / 2),
+        box: {
+          dimensions: new Cesium.Cartesian3(40, 40, h),
+          material: getStatusColor(b.status),
         },
         label: {
           text: b.name,
