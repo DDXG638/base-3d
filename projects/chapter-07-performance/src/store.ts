@@ -17,7 +17,7 @@ interface PerfState {
   setRenderMode: (mode: RenderMode) => void;
   setCubeCount: (n: number) => void;
   toggleLOD: () => void;
-  updatePerf: (data: { fps: number; drawCalls: number; triangles: number; points: number }) => void;
+  updatePerf: (data: { fps?: number; drawCalls: number; triangles: number; points: number }) => void;
 }
 
 export const useStore = create<PerfState>((set) => ({

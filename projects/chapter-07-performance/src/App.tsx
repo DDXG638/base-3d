@@ -19,7 +19,7 @@ export default function App() {
           setInterval(() => {
             const info = gl.info.render;
             useStore.getState().updatePerf({
-              fps: 0, // FPS 由 PerfMonitor 组件自己算
+              // fps: 0, // FPS 由 PerfMonitor 组件自己算
               drawCalls: info.calls,
               triangles: info.triangles,
               points: info.points ?? 0,
