@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../store';
+import { Text } from '@react-three/drei';
 import { SphereGeometry } from 'three';
 
 /** LOD 演示：3 个球体分别用高/中/低面数，根据相机距离自动切换 */
@@ -24,7 +25,7 @@ export default function LODSystem() {
         <mesh geometry={highGeo} position={[0, 0, -9]}>
           <meshStandardMaterial color="#e07a5f" wireframe />
         </mesh>
-        <HtmlLabel text="无 LOD" position={[0, 0.8, -6]} />
+        <Label text="无 LOD" position={[0, 0.8, -6]} />
       </group>
     );
   }
@@ -46,17 +47,23 @@ export default function LODSystem() {
           <meshStandardMaterial color="#4ecdc4" />
         </mesh>
       </lOD>
-      <HtmlLabel text="LOD" position={[0, 0.8, -6]} />
+      <Label text="LOD" position={[0, 0.8, -6]} />
     </group>
   );
 }
 
-/** 简单的文字标注 */
-function HtmlLabel({ position }: { text: string; position: [number, number, number] }) {
+function Label({ text, position }: { text: string; position: [number, number, number] }) {
   return (
-    <mesh position={position}>
-      <planeGeometry args={[1.2, 0.4]} />
-      <meshBasicMaterial color="#000" transparent opacity={0.7} side={2} />
-    </mesh>
+    <Text
+      position={position}
+      fontSize={0.3}
+      color="white"
+      anchorX="center"
+      anchorY="middle"
+      outlineWidth={0.02}
+      outlineColor="#000"
+    >
+      {text}
+    </Text>
   );
 }
