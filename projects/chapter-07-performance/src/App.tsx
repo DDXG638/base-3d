@@ -7,6 +7,8 @@ import ControlPanel from './components/ControlPanel';
 export default function App() {
   const drawCalls = useStore((s) => s.drawCalls);
   const triangles = useStore((s) => s.triangles);
+  const geometries = useStore((s) => s.geometries)
+  const textures = useStore((s) => s.textures)
 
   return (
     <div className="relative w-full h-full">
@@ -18,11 +20,14 @@ export default function App() {
           // 每 500ms 采集一次性能数据
           setInterval(() => {
             const info = gl.info.render;
+            const memory = gl.info.memory
             useStore.getState().updatePerf({
               // fps: 0, // FPS 由 PerfMonitor 组件自己算
               drawCalls: info.calls,
               triangles: info.triangles,
               points: info.points ?? 0,
+              geometries: memory.geometries,
+              textures: memory.textures
             });
           }, 500);
         }}
@@ -37,6 +42,8 @@ export default function App() {
       <div className="absolute bottom-4 right-4 bg-gray-900/80 backdrop-blur rounded-lg px-3 py-2 text-xs text-gray-400 font-mono space-y-0.5 border border-gray-700">
         <div>Draw Calls: <span className="text-teal-400">{drawCalls}</span></div>
         <div>Triangles: <span className="text-teal-400">{triangles.toLocaleString()}</span></div>
+        <div>geometries: <span className="text-teal-400">{geometries}</span></div>
+        <div>textures: <span className="text-teal-400">{textures}</span></div>
       </div>
 
       {/* 控制面板 */}
