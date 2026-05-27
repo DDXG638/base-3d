@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useStore } from '../store';
 import { Text } from '@react-three/drei';
 import { LOD, Mesh, SphereGeometry, MeshStandardMaterial } from 'three';
@@ -10,28 +11,36 @@ function LODSample({
   high: SphereGeometry; medium: SphereGeometry; low: SphereGeometry;
   pos: [number, number, number];
 }) {
+  const lodRef = useRef<LOD>(null);
+  const { camera } = useThree();
+
   // 创建 LOD 对象并添加 3 级精度
   const lod = useMemo(() => {
     const obj = new LOD();
-    // Three.js LOD: addLevel(object, distance)
-    // distance 表示「相机距离 ≤ 此值时显示」
     obj.addLevel(
       new Mesh(high, new MeshStandardMaterial({ color: '#4ecdc4', wireframe: true })),
-      0,
+      0,    // 距离 0~5：高精度 64 段
     );
     obj.addLevel(
       new Mesh(medium, new MeshStandardMaterial({ color: '#4ecdc4', wireframe: true })),
-      5,
+      5,    // 距离 5~10：中精度 32 段
     );
     obj.addLevel(
       new Mesh(low, new MeshStandardMaterial({ color: '#4ecdc4', wireframe: true })),
-      10,
+      10,   // 距离 10+：低精度 8 段
     );
     obj.position.set(...pos);
     return obj;
   }, [high, medium, low, pos]);
 
-  return <primitive object={lod} />;
+  // 关键：每帧调用 lod.update(camera)，否则 LOD 不知道相机距离发生了变化
+  useFrame(() => {
+    if (lodRef.current) {
+      lodRef.current.update(camera);
+    }
+  });
+
+  return <primitive ref={lodRef} object={lod} />;
 }
 
 export default function LODSystem() {
