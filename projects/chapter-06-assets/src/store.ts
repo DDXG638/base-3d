@@ -1,18 +1,38 @@
 import { create } from 'zustand';
-import { Mesh } from 'three';
+import { Mesh, WebGLRenderer } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-/** 创建已配置 DRACOLoader 的 GLTFLoader 单例 */
-export function createGLTFLoader(): GLTFLoader {
-  const dracoLoader = new DRACOLoader();
-  // Google 提供的 Draco 解码器 CDN（WASM 版本）
-  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-  // GLB 文件可能内嵌了 Draco 压缩数据，使用 CDN 的 WASM 解码器解压
+/** 全局 renderer 引用，Canvas 挂载后设置，用于 KTX2Loader */
+let _renderer: WebGLRenderer | null = null;
 
+/** Canvas 内部调用此函数保存 renderer 引用 */
+export function setRenderer(renderer: WebGLRenderer) {
+  _renderer = renderer;
+}
+
+/**
+ * 创建已配置 DRACOLoader + KTX2Loader 的 GLTFLoader。
+ * KTX2Loader 需要 WebGLRenderer 做 GPU 纹理格式能力检测。
+ */
+export function createGLTFLoader(): GLTFLoader {
   const loader = new GLTFLoader();
+
+  // Draco 几何压缩解码器
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
   loader.setDRACOLoader(dracoLoader);
+
+  // KTX2/Basis Universal 纹理压缩解码器
+  if (_renderer) {
+    const ktx2Loader = new KTX2Loader()
+      .setTranscoderPath('https://unpkg.com/three@0.170.0/examples/jsm/libs/basis/')
+      .detectSupport(_renderer);
+    loader.setKTX2Loader(ktx2Loader);
+  }
+
   return loader;
 }
 

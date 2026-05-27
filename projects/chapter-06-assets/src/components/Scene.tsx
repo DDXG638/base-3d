@@ -1,12 +1,22 @@
+import { useEffect } from 'react';
+import { useThree } from '@react-three/fiber';
 import { OrbitControls, Grid, Bounds } from '@react-three/drei';
 import ModelViewer from './ModelViewer';
-import { useStore } from '../store';
+import { useStore, setRenderer } from '../store';
+
+/** 保存 renderer 引用到 store 模块，供 KTX2Loader 使用 */
+function RendererCapture() {
+  const gl = useThree((s) => s.gl);
+  useEffect(() => { setRenderer(gl); }, [gl]);
+  return null;
+}
 
 export default function Scene() {
   const gltf = useStore((s) => s.gltf);
 
   return (
     <>
+      <RendererCapture />
       <ambientLight intensity={0.5} />
       <directionalLight position={[5, 8, 5]} intensity={4} castShadow
         shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
