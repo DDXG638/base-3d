@@ -120,6 +120,8 @@ export default function PhysicsWorld() {
           roughness: 0.6,
         });
         const mesh = new Mesh(geo, mat);
+        // 渲染端初始位置与物理端对齐，避免第一帧从原点跳过来
+        mesh.position.set(x, size[1] / 2, z);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
 
@@ -156,6 +158,8 @@ export default function PhysicsWorld() {
         roughness: 0.3,
       });
       const ballMesh = new Mesh(ballGeo, ballMat);
+      // 渲染端初始位置与物理端对齐
+      ballMesh.position.set(-4.5, 1.0, 0);
       ballMesh.castShadow = true;
       scene.add(ballMesh);
 
