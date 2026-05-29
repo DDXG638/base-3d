@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { Environment, Stats } from '@react-three/drei';
+import { Environment } from '@react-three/drei';
 import Scene from './components/Scene';
 import Toolbar from './components/Toolbar';
 import SceneTreePanel from './components/SceneTreePanel';
@@ -23,7 +23,6 @@ export default function App() {
           >
             <Environment preset="studio" />
             <Scene />
-            <Stats />
           </Canvas>
 
           {/* 视口上的变换模式指示 */}

@@ -4,7 +4,6 @@ import { TransformControls } from '@react-three/drei';
 import type { Object3D } from 'three';
 import { useStore } from '../store';
 
-/** TransformCommand：记录一次 Gizmo 拖拽的 旧值→新值 */
 function createTransformCommand(
   objectId: string,
   prop: 'position' | 'rotation' | 'scale',
@@ -24,8 +23,9 @@ export default function TransformControllerComp() {
   const transformMode = useStore((s) => s.transformMode);
   const setDragging = useStore((s) => s.setDragging);
   const executeCommand = useStore((s) => s.executeCommand);
+  const updateObject = useStore((s) => s.updateObject);
 
-  // 记录拖拽开始时的旧值
+  // 拖拽前的初始值（用于撤销命令）
   const dragStartVal = useRef<[number, number, number] | null>(null);
 
   const findMesh = useCallback((): Object3D | null => {
@@ -37,7 +37,25 @@ export default function TransformControllerComp() {
     return result;
   }, [scene, selectedId]);
 
-  // 选中变化 → attach/detach
+  /** 从 mesh 读取当前变换并同步到 store（拖拽过程中持续调用，更新属性面板） */
+  const syncMeshToStore = useCallback(() => {
+    if (!selectedId) return;
+    const target = findMesh();
+    if (!target) return;
+    switch (transformMode) {
+      case 'translate':
+        updateObject(selectedId, { position: [target.position.x, target.position.y, target.position.z] });
+        break;
+      case 'rotate':
+        updateObject(selectedId, { rotation: [target.rotation.x, target.rotation.y, target.rotation.z] });
+        break;
+      case 'scale':
+        updateObject(selectedId, { scale: [target.scale.x, target.scale.y, target.scale.z] });
+        break;
+    }
+  }, [findMesh, selectedId, transformMode, updateObject]);
+
+  // 选中变化 → attach/detach mesh
   useEffect(() => {
     const controls = transformRef.current;
     if (!controls) return;
@@ -49,11 +67,12 @@ export default function TransformControllerComp() {
     }
   });
 
-  // 事件绑定
+  // 事件绑定（重新绑定是因为闭包中捕获了 transformMode、selectedId 等）
   useEffect(() => {
     const controls = transformRef.current;
     if (!controls) return;
 
+    // 按下 Gizmo：记录初始值（用于撤销命令），禁用 Orbit
     const onPointerDown = () => {
       setDragging(true);
       const target = findMesh();
@@ -66,6 +85,7 @@ export default function TransformControllerComp() {
       }
     };
 
+    // 松开 Gizmo：创建命令压入撤销栈
     const onPointerUp = () => {
       setDragging(false);
       const target = findMesh();
@@ -76,20 +96,28 @@ export default function TransformControllerComp() {
           case 'rotate': newVal = [target.rotation.x, target.rotation.y, target.rotation.z]; break;
           case 'scale': newVal = [target.scale.x, target.scale.y, target.scale.z]; break;
         }
-        const cmd = createTransformCommand(selectedId, transformMode === 'translate' ? 'position' : transformMode === 'rotate' ? 'rotation' : 'scale', dragStartVal.current, newVal);
+        const prop = transformMode === 'translate' ? 'position' : transformMode === 'rotate' ? 'rotation' : 'scale';
+        const cmd = createTransformCommand(selectedId, prop, dragStartVal.current, newVal);
         executeCommand(cmd);
       }
       dragStartVal.current = null;
     };
 
+    // 拖拽中每帧触发：将 mesh 位置实时同步到 store → 属性面板实时更新
+    const onObjectChange = () => {
+      syncMeshToStore();
+    };
+
     controls.addEventListener('pointerDown', onPointerDown);
     controls.addEventListener('pointerUp', onPointerUp);
+    controls.addEventListener('objectChange', onObjectChange);
 
     return () => {
       controls.removeEventListener('pointerDown', onPointerDown);
       controls.removeEventListener('pointerUp', onPointerUp);
+      controls.removeEventListener('objectChange', onObjectChange);
     };
-  }, [setDragging, findMesh, selectedId, transformMode, executeCommand]);
+  }, [setDragging, findMesh, selectedId, transformMode, executeCommand, syncMeshToStore]);
 
   return (
     <TransformControls
