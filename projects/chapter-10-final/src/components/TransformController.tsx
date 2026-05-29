@@ -23,7 +23,6 @@ export default function TransformControllerComp() {
   const transformMode = useStore((s) => s.transformMode);
   const setDragging = useStore((s) => s.setDragging);
   const executeCommand = useStore((s) => s.executeCommand);
-  const updateObject = useStore((s) => s.updateObject);
 
   // 拖拽前的初始值（用于撤销命令）
   const dragStartVal = useRef<[number, number, number] | null>(null);
@@ -36,24 +35,6 @@ export default function TransformControllerComp() {
     });
     return result;
   }, [scene, selectedId]);
-
-  /** 从 mesh 读取当前变换并同步到 store（拖拽过程中持续调用，更新属性面板） */
-  const syncMeshToStore = useCallback(() => {
-    if (!selectedId) return;
-    const target = findMesh();
-    if (!target) return;
-    switch (transformMode) {
-      case 'translate':
-        updateObject(selectedId, { position: [target.position.x, target.position.y, target.position.z] });
-        break;
-      case 'rotate':
-        updateObject(selectedId, { rotation: [target.rotation.x, target.rotation.y, target.rotation.z] });
-        break;
-      case 'scale':
-        updateObject(selectedId, { scale: [target.scale.x, target.scale.y, target.scale.z] });
-        break;
-    }
-  }, [findMesh, selectedId, transformMode, updateObject]);
 
   // 选中变化 → attach/detach mesh
   useEffect(() => {
@@ -103,21 +84,14 @@ export default function TransformControllerComp() {
       dragStartVal.current = null;
     };
 
-    // 拖拽中每帧触发：将 mesh 位置实时同步到 store → 属性面板实时更新
-    const onObjectChange = () => {
-      syncMeshToStore();
-    };
-
     controls.addEventListener('pointerDown', onPointerDown);
     controls.addEventListener('pointerUp', onPointerUp);
-    controls.addEventListener('objectChange', onObjectChange);
 
     return () => {
       controls.removeEventListener('pointerDown', onPointerDown);
       controls.removeEventListener('pointerUp', onPointerUp);
-      controls.removeEventListener('objectChange', onObjectChange);
     };
-  }, [setDragging, findMesh, selectedId, transformMode, executeCommand, syncMeshToStore]);
+  }, [setDragging, findMesh, selectedId, transformMode, executeCommand]);
 
   return (
     <TransformControls
