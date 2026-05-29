@@ -23,6 +23,7 @@ export default function TransformControllerComp() {
   const transformMode = useStore((s) => s.transformMode);
   const setDragging = useStore((s) => s.setDragging);
   const executeCommand = useStore((s) => s.executeCommand);
+  const updateObject = useStore((s) => s.updateObject);
 
   // 拖拽前的初始值（用于撤销命令）
   const dragStartVal = useRef<[number, number, number] | null>(null);
@@ -78,6 +79,9 @@ export default function TransformControllerComp() {
           case 'scale': newVal = [target.scale.x, target.scale.y, target.scale.z]; break;
         }
         const prop = transformMode === 'translate' ? 'position' : transformMode === 'rotate' ? 'rotation' : 'scale';
+        // 1. 先通过 store hook 更新 objects 数据，触发 React 重渲染（属性面板 + HighlightMesh）
+        updateObject(selectedId, { [prop]: newVal });
+        // 2. 创建撤销命令压栈（命令内部用 useStore.getState 直接读写，确保撤销时也正确）
         const cmd = createTransformCommand(selectedId, prop, dragStartVal.current, newVal);
         executeCommand(cmd);
       }
