@@ -39,6 +39,19 @@ function GLTFModel({ obj }: { obj: SceneObject }) {
     scale={obj.scale} userData={{ objectId: obj.id }} />;
 }
 
+/** 选中高亮——独立组件保证 hook 执行次数始终一致 */
+function HighlightMesh({ obj }: { obj: SceneObject }) {
+  const geo = useGeomFromType(obj.type);
+  if (!geo) return null;
+  return (
+    <mesh position={obj.position} rotation={obj.rotation}
+      scale={obj.scale.map((s) => s * 1.02) as [number, number, number]}>
+      <primitive object={geo} attach="geometry" />
+      <meshBasicMaterial color="#4ecdc4" wireframe transparent opacity={0.3} />
+    </mesh>
+  );
+}
+
 export default function EditorObjects() {
   const objects = useStore((s) => s.objects);
   const selectedId = useStore((s) => s.selectedId);
@@ -54,14 +67,8 @@ export default function EditorObjects() {
           }}
         >
           {obj.type === 'gltf' ? <GLTFModel obj={obj} /> : <PrimitiveMesh obj={obj} />}
-          {/* 选中高亮：半透明线框 */}
-          {selectedId === obj.id && obj.type !== 'gltf' && (
-            <mesh position={obj.position} rotation={obj.rotation}
-              scale={obj.scale.map((s) => s * 1.02) as [number, number, number]}>
-              <primitive object={useGeomFromType(obj.type)!} attach="geometry" />
-              <meshBasicMaterial color="#4ecdc4" wireframe transparent opacity={0.3} />
-            </mesh>
-          )}
+          {/* 选中高亮：抽成独立组件，避免 hook 在条件判断中执行 */}
+          {selectedId === obj.id && obj.type !== 'gltf' && <HighlightMesh obj={obj} />}
         </group>
       ))}
       {/* 不可见地面层——点击空白区域取消选中 */}
