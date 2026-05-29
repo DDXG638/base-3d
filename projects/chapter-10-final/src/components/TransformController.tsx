@@ -54,48 +54,49 @@ export default function TransformControllerComp() {
     const controls = transformRef.current;
     if (!controls) return;
 
-    // 按下 Gizmo：记录初始值（用于撤销命令），禁用 Orbit
-    const onPointerDown = () => {
-      setDragging(true);
-      const target = findMesh();
-      if (target) {
-        switch (transformMode) {
-          case 'translate': dragStartVal.current = [target.position.x, target.position.y, target.position.z]; break;
-          case 'rotate': dragStartVal.current = [target.rotation.x, target.rotation.y, target.rotation.z]; break;
-          case 'scale': dragStartVal.current = [target.scale.x, target.scale.y, target.scale.z]; break;
+    // TransformControls 的拖拽生命周期事件：dragging-changed
+    // event.value === true  → 开始拖拽
+    // event.value === false → 结束拖拽
+    const onDraggingChanged = (event: any) => {
+      const isDragging = event.value;
+
+      if (isDragging) {
+        // 开始拖拽：记录初始值（用于撤销命令）
+        const target = findMesh();
+        if (target) {
+          switch (transformMode) {
+            case 'translate': dragStartVal.current = [target.position.x, target.position.y, target.position.z]; break;
+            case 'rotate': dragStartVal.current = [target.rotation.x, target.rotation.y, target.rotation.z]; break;
+            case 'scale': dragStartVal.current = [target.scale.x, target.scale.y, target.scale.z]; break;
+          }
         }
+        setDragging(true);
+      } else {
+        // 结束拖拽：从 mesh 读取最终值 → 更新 store → 创建撤销命令
+        setDragging(false);
+        const target = findMesh();
+        if (target && dragStartVal.current && selectedId) {
+          let newVal: [number, number, number];
+          switch (transformMode) {
+            case 'translate': newVal = [target.position.x, target.position.y, target.position.z]; break;
+            case 'rotate': newVal = [target.rotation.x, target.rotation.y, target.rotation.z]; break;
+            case 'scale': newVal = [target.scale.x, target.scale.y, target.scale.z]; break;
+          }
+          const prop = transformMode === 'translate' ? 'position' : transformMode === 'rotate' ? 'rotation' : 'scale';
+          updateObject(selectedId, { [prop]: newVal });
+          const cmd = createTransformCommand(selectedId, prop, dragStartVal.current, newVal);
+          executeCommand(cmd);
+        }
+        dragStartVal.current = null;
       }
     };
 
-    // 松开 Gizmo：创建命令压入撤销栈
-    const onPointerUp = () => {
-      setDragging(false);
-      const target = findMesh();
-      if (target && dragStartVal.current && selectedId) {
-        let newVal: [number, number, number];
-        switch (transformMode) {
-          case 'translate': newVal = [target.position.x, target.position.y, target.position.z]; break;
-          case 'rotate': newVal = [target.rotation.x, target.rotation.y, target.rotation.z]; break;
-          case 'scale': newVal = [target.scale.x, target.scale.y, target.scale.z]; break;
-        }
-        const prop = transformMode === 'translate' ? 'position' : transformMode === 'rotate' ? 'rotation' : 'scale';
-        // 1. 先通过 store hook 更新 objects 数据，触发 React 重渲染（属性面板 + HighlightMesh）
-        updateObject(selectedId, { [prop]: newVal });
-        // 2. 创建撤销命令压栈（命令内部用 useStore.getState 直接读写，确保撤销时也正确）
-        const cmd = createTransformCommand(selectedId, prop, dragStartVal.current, newVal);
-        executeCommand(cmd);
-      }
-      dragStartVal.current = null;
-    };
-
-    controls.addEventListener('pointerDown', onPointerDown);
-    controls.addEventListener('pointerUp', onPointerUp);
+    controls.addEventListener('dragging-changed', onDraggingChanged);
 
     return () => {
-      controls.removeEventListener('pointerDown', onPointerDown);
-      controls.removeEventListener('pointerUp', onPointerUp);
+      controls.removeEventListener('dragging-changed', onDraggingChanged);
     };
-  }, [setDragging, findMesh, selectedId, transformMode, executeCommand]);
+  }, [setDragging, findMesh, selectedId, transformMode, executeCommand, updateObject]);
 
   return (
     <TransformControls
