@@ -37,6 +37,9 @@ interface EditorState {
   addGLTFObject: (data: { name: string; modelData: ArrayBuffer; modelUrl: string; position: [number, number, number] }) => void;
   setTransformMode: (m: TransformMode) => void;
   setDragging: (d: boolean) => void;
+  /** 拖拽刚结束——地面点击应忽略，防止误取消选中 */
+  justFinishedDragging: boolean;
+  setJustFinishedDragging: (v: boolean) => void;
 
   // 撤销/重做
   undo: () => void;
@@ -63,6 +66,7 @@ export const useStore = create<EditorState>((set, get) => ({
   selectedId: null,
   transformMode: 'translate',
   isDragging: false,
+  justFinishedDragging: false,
   canUndo: false,
   canRedo: false,
 
@@ -116,6 +120,7 @@ export const useStore = create<EditorState>((set, get) => ({
 
   setTransformMode: (mode) => set({ transformMode: mode }),
   setDragging: (d) => set({ isDragging: d }),
+  setJustFinishedDragging: (v) => set({ justFinishedDragging: v }),
 
   undo: () => { undoManager.undo(); set({ canUndo: undoManager.canUndo, canRedo: undoManager.canRedo }); },
   redo: () => { undoManager.redo(); set({ canUndo: undoManager.canUndo, canRedo: undoManager.canRedo }); },

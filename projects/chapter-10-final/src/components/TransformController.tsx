@@ -22,6 +22,7 @@ export default function TransformControllerComp() {
   const selectedId = useStore((s) => s.selectedId);
   const transformMode = useStore((s) => s.transformMode);
   const setDragging = useStore((s) => s.setDragging);
+  const setJustFinishedDragging = useStore((s) => s.setJustFinishedDragging);
   const executeCommand = useStore((s) => s.executeCommand);
   const updateObject = useStore((s) => s.updateObject);
 
@@ -74,6 +75,7 @@ export default function TransformControllerComp() {
       } else {
         // 结束拖拽：从 mesh 读取最终值 → 更新 store → 创建撤销命令
         setDragging(false);
+        setJustFinishedDragging(true); // 防止松手时误触地面 → 取消选中
         const target = findMesh();
         if (target && dragStartVal.current && selectedId) {
           let newVal: [number, number, number];
@@ -96,7 +98,7 @@ export default function TransformControllerComp() {
     return () => {
       controls.removeEventListener('dragging-changed', onDraggingChanged);
     };
-  }, [setDragging, findMesh, selectedId, transformMode, executeCommand, updateObject]);
+  }, [setDragging, setJustFinishedDragging, findMesh, selectedId, transformMode, executeCommand, updateObject]);
 
   return (
     <TransformControls

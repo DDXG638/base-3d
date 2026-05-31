@@ -55,6 +55,8 @@ function HighlightMesh({ obj }: { obj: SceneObject }) {
 export default function EditorObjects() {
   const objects = useStore((s) => s.objects);
   const selectedId = useStore((s) => s.selectedId);
+  const justFinishedDragging = useStore((s) => s.justFinishedDragging);
+  const setJustFinishedDragging = useStore((s) => s.setJustFinishedDragging);
   const selectObject = useStore((s) => s.selectObject);
 
   return (
@@ -73,7 +75,15 @@ export default function EditorObjects() {
       ))}
       {/* 不可见地面层——点击空白区域取消选中 */}
       <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} visible={false}
-        onClick={(e) => { e.stopPropagation(); selectObject(null); }}>
+        onClick={(e) => {
+          e.stopPropagation();
+          if (justFinishedDragging) {
+            // 拖拽刚结束，忽略这次点击（是松手时误触的），只清除标记
+            setJustFinishedDragging(false);
+            return;
+          }
+          selectObject(null);
+        }}>
         <planeGeometry args={[30, 30]} />
         <meshBasicMaterial />
       </mesh>
