@@ -55,8 +55,6 @@ function HighlightMesh({ obj }: { obj: SceneObject }) {
 export default function EditorObjects() {
   const objects = useStore((s) => s.objects);
   const selectedId = useStore((s) => s.selectedId);
-  const justFinishedDragging = useStore((s) => s.justFinishedDragging);
-  const setJustFinishedDragging = useStore((s) => s.setJustFinishedDragging);
   const selectObject = useStore((s) => s.selectObject);
 
   return (
@@ -77,9 +75,9 @@ export default function EditorObjects() {
       <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} visible={false}
         onClick={(e) => {
           e.stopPropagation();
-          if (justFinishedDragging) {
-            // 拖拽刚结束，忽略这次点击（是松手时误触的），只清除标记
-            setJustFinishedDragging(false);
+          // 用 getState 同步读取，避免 hook 异步更新读到旧的 false
+          if (useStore.getState().justFinishedDragging) {
+            useStore.getState().setJustFinishedDragging(false);
             return;
           }
           selectObject(null);
