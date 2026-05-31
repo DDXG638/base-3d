@@ -85,7 +85,7 @@ export default function TransformControllerComp() {
             case 'scale': newVal = [target.scale.x, target.scale.y, target.scale.z]; break;
           }
           const prop = transformMode === 'translate' ? 'position' : transformMode === 'rotate' ? 'rotation' : 'scale';
-          updateObject(selectedId, { [prop]: newVal });
+          // updateObject(selectedId, { [prop]: newVal });
           const cmd = createTransformCommand(selectedId, prop, dragStartVal.current, newVal);
           executeCommand(cmd);
         }
